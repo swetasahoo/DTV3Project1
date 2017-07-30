@@ -60,11 +60,11 @@ QueryProcessingEngine queryProcessingEngine;
 		display("selectAllWithoutWhereTestCase", resultSet);
 
 	}
-
+	
 	@Test
 	public void selectwithGroupByTestCase()  {
 		
-		QueryParameter queryParameter=queryParser.parseQuery("select Dept,avg(Salary),sum(Salary),count(Salary) from  D:\\DTV3\\csvfile\\emp.csv group by Dept");
+		QueryParameter queryParameter=queryParser.parseQuery("select department,sum(salary) from  D:\\DTV3\\csvfile\\emp1.csv group by department");
 		List<DataRow> resultSet=queryProcessingEngine.executeQuery(queryParameter);	
 		
 		assertNotNull(resultSet);

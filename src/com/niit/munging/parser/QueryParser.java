@@ -46,9 +46,9 @@ public class QueryParser {
 
 		}
 		else{
-			String selectgroupParam = selectOrderParameter;
+			
 
-			queryParameter = this.selectGroupClause(selectgroupParam);
+			queryParameter = this.selectGroupClause(selectOrderParameter);
 		}
 		
 		return queryParameter;
@@ -69,9 +69,9 @@ public class QueryParser {
 		} 
 		else
 		{
-			String selectParam = selectGroupParam;
+			
 
-			queryParameter = this.selectToFromClause(selectParam);
+			queryParameter = this.selectToFromClause(selectGroupParam);
 		}
 		
 		return queryParameter;
@@ -80,7 +80,6 @@ public class QueryParser {
 	private QueryParameter selectToFromClause(String selectFromParameter) {
 
 		List<String> fieldlist = new ArrayList<>();
-		//String patternString = "select(.*)from(.*)";
 		Pattern pattern = Pattern.compile("select(.*)from(.*)");
 		List<AggregateFunction> aggregateFunctionlist=new ArrayList<>();
 
@@ -110,10 +109,7 @@ public class QueryParser {
 						aggregateFunction.setFunctionColumn(splitField2[0]);
 						aggregateFunctionlist.add(aggregateFunction);
 						
-						if(!(queryParameter.getQUERY_TYPE().equals("GROUPBY_QUERY")))
-						{
-						queryParameter.setQUERY_TYPE("AGGREGATE_QUERY");
-						}
+					
 						
 					}
 					else
@@ -121,12 +117,15 @@ public class QueryParser {
 					fieldlist.add(field.trim());
 					}
 					}
+				if(!(queryParameter.getQUERY_TYPE().equals("GROUPBY_QUERY")))
+				{
+				queryParameter.setQUERY_TYPE("AGGREGATE_QUERY");
+				}
 				
 				}
 			}
 
-			filename = matcher.group(2);
-		
+			filename = matcher.group(2);	
 			queryParameter.setFields(fieldlist);
 			queryParameter.setFilePath(filename.trim());
 			queryParameter.setAggregateFunctionList(aggregateFunctionlist);
@@ -147,8 +146,8 @@ public class QueryParser {
 
 		} else {
 			
-			String wheregroupParam = whereOrderParam;		
-			queryParameter = this.whereGroupClause(wheregroupParam);
+					
+			queryParameter = this.whereGroupClause(whereOrderParam);
 
 		}
 		return queryParameter;
@@ -167,9 +166,8 @@ public class QueryParser {
 			return this.onlyWhereClause(splitQuery[0]);
 
 		} else {
-		
-			String whereParameter = whereGroupParam;	
-			queryParameter = this.onlyWhereClause(whereParameter);
+			
+			queryParameter = this.onlyWhereClause(whereGroupParam);
 			queryParameter.setWhereCondition(true);
 		}
 		

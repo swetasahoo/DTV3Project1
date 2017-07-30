@@ -5,9 +5,12 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.niit.munging.parser.AggregateFunction;
@@ -41,120 +44,167 @@ public class GroupByQuery implements Query {
 
 	@Override
 	public List<DataRow> executeQuery(QueryParameter queryParameter) {
-
+		// TODO Auto-generated method stub
 		BufferedReader bufferReader;
 		String fileRecord;
-		int groupByColumnIndex;
+		String record[];
+		HashMap<String, Integer> groupByMap = new HashMap<String, Integer>();
+		Set<String> groupByColumnSet = new LinkedHashSet<>();
 
-		List<String> groupByListColumn = new ArrayList<>();
-
-		groupByColumnIndex = csvFileHeader.getColumnIndex(queryParameter.getGroupBy(), queryParameter.getFilePath());
-
+		int groupByColumnIndex = csvFileHeader.getColumnIndex(queryParameter.getGroupBy(),
+				queryParameter.getFilePath());
+		int aggregateColumnIndex;
+		int counter=0;
 		
 		try {
 			bufferReader = new BufferedReader(new FileReader(queryParameter.getFilePath().trim()));
 			bufferReader.readLine();// goto first record
-			while ((fileRecord = bufferReader.readLine()) != null) {
-				String record[] = fileRecord.split(",");
-				groupByListColumn.add(record[groupByColumnIndex]);
-			}
-			bufferReader.close();
-		} catch (Exception exception) {
-			exception.printStackTrace();
-		}
 
-		//eleminate the duplicate value from groupByColumnList and add it in a LinkHashSet Datastructure
-		Set<String> groupByColumnSet = new LinkedHashSet<>();
-		for (String uniqueColumn : groupByListColumn) {
-			groupByColumnSet.add(uniqueColumn);
+			// Arrays.asList(record);
+			for (AggregateFunction aggregateFunction : queryParameter.getAggregateFunctionList()) {
 
-		}
-
-		List<AggregateFunction> aggregateFunctionList = queryParameter.getAggregateFunctionList();
-		for (AggregateFunction aggregateFunction : aggregateFunctionList) {
-			try {
-
-				int sum;
-				List<Integer> aggregateColumnList = new ArrayList<>();
-				int aggregateColumnIndex = csvFileHeader.getColumnIndex(aggregateFunction.getFunctionColumn(),
+				aggregateColumnIndex = csvFileHeader.getColumnIndex(aggregateFunction.getFunctionColumn(),
 						queryParameter.getFilePath());
 				
-				bufferReader = new BufferedReader(new FileReader(queryParameter.getFilePath().trim()));
-				bufferReader.readLine();
-				String record[];
 				while ((fileRecord = bufferReader.readLine()) != null) {
 					record = fileRecord.split(",");
 
-					if (record[aggregateColumnIndex].isEmpty()) {
-						aggregateColumnList.add(new Integer(0));
-					} else {
-						aggregateColumnList.add(Integer.parseInt(record[aggregateColumnIndex]));
-					}
-				}
-
-				String functionName = aggregateFunction.getFunctionName();
-
-				for (String column : groupByColumnSet) {
-					int counter = 0;
-					dataRow = new DataRow();
-					dataRow.put(counter, column);
-
-					switch (functionName) {
+					switch (aggregateFunction.getFunctionName()) {
 					case "sum":
-						sum = 0;
-						for (int i = 0; i < groupByListColumn.size(); i++) {
-							if (column.trim().equals(groupByListColumn.get(i).trim())) {
-								sum = sum + aggregateColumnList.get(i);
+						
+						if (groupByMap.get(record[groupByColumnIndex]) == null) {
+							if (!(record[aggregateColumnIndex].isEmpty())) {
+								
+								groupByMap.put(record[groupByColumnIndex],Integer.parseInt(record[aggregateColumnIndex]));
 							}
 						}
+							else
+							{
+								if (!(record[aggregateColumnIndex].isEmpty())) {
+									
+									groupByMap.put(record[groupByColumnIndex],groupByMap.get(record[groupByColumnIndex])+Integer.parseInt(record[aggregateColumnIndex]));
+							}
+						}
+						
 
-						dataRow.put(++counter, String.valueOf(sum));
 						break;
 					case "avg":
-						int noOfColumn = 0;
-						sum = 0;
-						for (int i = 0; i < groupByListColumn.size(); i++) {
-							if (column.trim().equals(groupByListColumn.get(i).trim())) {
-								noOfColumn++;
-								sum = sum + aggregateColumnList.get(i);
-							}
-						}
-						float avg = (float) sum / noOfColumn;
-						dataRow.put(++counter, String.valueOf(avg));
 						break;
 					case "min":
-						
 						break;
 					case "max":
 						break;
 					case "count":
-						int count=0;
-						for (int i = 0; i < groupByListColumn.size(); i++) {
-							if (column.trim().equals(groupByListColumn.get(i).trim())) {
-								count ++;
-							}
-						}
-
-						dataRow.put(++counter, String.valueOf(count));
 						break;
 
 					}
 
-					resultSet.add(dataRow);
 				}
 
 			}
-
-			catch (Exception exception) {
+			
+			
+			for (Map.Entry<String, Integer> groupColumn : groupByMap.entrySet()) {
+				counter=0;
+				dataRow = new DataRow();
 				
-
+				dataRow.put(counter, groupColumn.getKey());
+				dataRow.put(counter++,String.valueOf(groupColumn.getValue()));
+				resultSet.add(dataRow);
 			}
-
+			
+		} catch (Exception exception) {
+			exception.printStackTrace();
 		}
 
-		// TODO Auto-generated method stub
-		//sortData(resultSet, queryParameter);
 		return resultSet;
 	}
+
+	/*
+	 * @Override public List<DataRow> executeQuery(QueryParameter
+	 * queryParameter) {
+	 * 
+	 * BufferedReader bufferReader; String fileRecord; int groupByColumnIndex;
+	 * 
+	 * List<String> groupByListColumn = new ArrayList<>();
+	 * 
+	 * groupByColumnIndex =
+	 * csvFileHeader.getColumnIndex(queryParameter.getGroupBy(),
+	 * queryParameter.getFilePath());
+	 * 
+	 * 
+	 * try { bufferReader = new BufferedReader(new
+	 * FileReader(queryParameter.getFilePath().trim()));
+	 * bufferReader.readLine();// goto first record while ((fileRecord =
+	 * bufferReader.readLine()) != null) { String record[] =
+	 * fileRecord.split(","); groupByListColumn.add(record[groupByColumnIndex]);
+	 * } bufferReader.close(); } catch (Exception exception) {
+	 * exception.printStackTrace(); }
+	 * 
+	 * //eleminate the duplicate value from groupByColumnList and add it in a
+	 * LinkHashSet Datastructure Set<String> groupByColumnSet = new
+	 * LinkedHashSet<>(); for (String uniqueColumn : groupByListColumn) {
+	 * groupByColumnSet.add(uniqueColumn);
+	 * 
+	 * }
+	 * 
+	 * List<AggregateFunction> aggregateFunctionList =
+	 * queryParameter.getAggregateFunctionList(); for (AggregateFunction
+	 * aggregateFunction : aggregateFunctionList) { try {
+	 * 
+	 * int sum; List<Integer> aggregateColumnList = new ArrayList<>(); int
+	 * aggregateColumnIndex =
+	 * csvFileHeader.getColumnIndex(aggregateFunction.getFunctionColumn(),
+	 * queryParameter.getFilePath());
+	 * 
+	 * bufferReader = new BufferedReader(new
+	 * FileReader(queryParameter.getFilePath().trim()));
+	 * bufferReader.readLine(); String record[]; while ((fileRecord =
+	 * bufferReader.readLine()) != null) { record = fileRecord.split(",");
+	 * 
+	 * if (record[aggregateColumnIndex].isEmpty()) { aggregateColumnList.add(new
+	 * Integer(0)); } else {
+	 * aggregateColumnList.add(Integer.parseInt(record[aggregateColumnIndex]));
+	 * } }
+	 * 
+	 * String functionName = aggregateFunction.getFunctionName();
+	 * 
+	 * for (String column : groupByColumnSet) { int counter = 0; dataRow = new
+	 * DataRow(); dataRow.put(counter, column);
+	 * 
+	 * switch (functionName) { case "sum": sum = 0; for (int i = 0; i <
+	 * groupByListColumn.size(); i++) { if
+	 * (column.trim().equals(groupByListColumn.get(i).trim())) { sum = sum +
+	 * aggregateColumnList.get(i); } }
+	 * 
+	 * dataRow.put(++counter, String.valueOf(sum)); break; case "avg": int
+	 * noOfColumn = 0; sum = 0; for (int i = 0; i < groupByListColumn.size();
+	 * i++) { if (column.trim().equals(groupByListColumn.get(i).trim())) {
+	 * noOfColumn++; sum = sum + aggregateColumnList.get(i); } } float avg =
+	 * (float) sum / noOfColumn; dataRow.put(++counter, String.valueOf(avg));
+	 * break; case "min":
+	 * 
+	 * break; case "max": break; case "count": int count=0; for (int i = 0; i <
+	 * groupByListColumn.size(); i++) { if
+	 * (column.trim().equals(groupByListColumn.get(i).trim())) { count ++; } }
+	 * 
+	 * dataRow.put(++counter, String.valueOf(count)); break;
+	 * 
+	 * }
+	 * 
+	 * resultSet.add(dataRow); }
+	 * 
+	 * }
+	 * 
+	 * catch (Exception exception) {
+	 * 
+	 * 
+	 * }
+	 * 
+	 * }
+	 * 
+	 * // TODO Auto-generated method stub sortData(resultSet, queryParameter);
+	 * return resultSet; }
+	 */
 
 }
